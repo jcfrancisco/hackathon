@@ -1,0 +1,104 @@
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Groupon - 21st Century Youth Project - Hackathon</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="Groupon + 21CYP">
+
+    <!-- CSS -->
+    <link href="../assets/css/bootstrap.css" rel="stylesheet">
+
+    <style>
+      body {
+        padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
+      }
+    </style>
+    <link href="../assets/css/bootstrap-responsive.css" rel="stylesheet">
+    <link href="../assets/css/hackathon.css" rel="stylesheet">
+
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="../assets/js/html5shiv.js"></script>
+    <![endif]-->
+
+    <!-- Fav and touch icons -->
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="../assets/ico/apple-touch-icon-144-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="../assets/ico/apple-touch-icon-114-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="../assets/ico/apple-touch-icon-72-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" href="../assets/ico/apple-touch-icon-57-precomposed.png">
+    <link rel="shortcut icon" href="../assets/ico/favicon.png">
+
+    <script src="../assets/js/jquery.js"></script>
+
+  </head>
+
+  <body>
+
+    <div class="navbar navbar-inverse navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="brand" href="#" style="color: #82b548">Groupon Hackathon</a>
+          <div class="nav-collapse collapse">
+            <ul class="nav">
+              <li><a href="#">Home</a></li>
+              <li><a href="example.html">Example 1</a></li>
+              <li><a href="example2.html">Example 2</a></li>
+              <li class="active"><a href="hackathon_project.html">Project</a></li>
+            </ul>
+          </div><!--/.nav-collapse -->
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <ol class="trips">
+      </ol>
+    </div> <!-- /container -->
+
+    <script>
+      $(document).ready(function() {
+          $.get("http://127.0.0.1:5000/data", function(data) {
+            var parsedData = JSON.parse(data);
+            var stations = {};
+            _.each(parsedData, function(trip) {
+
+              var numberOfTrips;
+
+              var fromStation = stations[trip.from_station_id];
+              if (fromStation) {
+                numberOfTrips = fromStation.numberOfTrips + 1;
+              } else {
+                numberOfTrips = 1;
+              }
+              stations[trip.from_station_id] = {id: trip.from_station_id, name: trip.from_station_name, numberOfTrips: numberOfTrips};
+
+              var toStation = stations[trip.to_station_id];
+              if (toStation) {
+                numberOfTrips = toStation.numberOfTrips + 1;
+              } else {
+                numberOfTrips = 1;
+              }
+              stations[trip.to_station_id] = {id: trip.to_station_id, name: trip.to_station_name, numberOfTrips: numberOfTrips};
+            });
+
+            var sortedStations = _.sortBy(stations, function(station, id) {
+              return station.numberOfTrips;
+            });
+
+            var sortedStationsDesc = sortedStations.reverse();
+
+            _.each(sortedStationsDesc, function(station) {
+              $('.trips').append("<li>" + station.name + " has " + station.numberOfTrips + " trips.</li>");
+            });
+          });
+      });
+    </script>
+    <script src='http://underscorejs.org/underscore-min.js'></script>
+  </body>
+</html>

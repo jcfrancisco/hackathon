@@ -1,12 +1,13 @@
 __author__ = 'rxue'
-import csv, time, json
-from flask import Flask, request
+import csv, time, json, copy
+from flask import Flask, request, jsonify
 from cross_domain import crossdomain
 
 app = Flask("__name__")
 app.debug = True
 
 tripData = []
+stationData = []
 
 
 @app.route("/")
@@ -31,6 +32,27 @@ def get_data():
     print query
     return json.dumps(list(filter_data(query, range_query)))
 
+@app.route("/station_counts", methods=['GET'])
+@crossdomain(origin='*')
+def get_station_counts():
+    ids = []
+    for station in stationData:
+        ids.append(station["id"]);
+    station_dict = dict(zip(ids, copy.deepcopy(stationData)));
+    for trip in tripData:
+        station = station_dict[trip["from_station_id"]];
+        if station.has_key("number_of_trips"):
+            station["number_of_trips"] = station["number_of_trips"] + 1;
+        else:
+            station["number_of_trips"] = 1;
+
+        station = station_dict[trip["to_station_id"]];
+        if station.has_key("number_of_trips"):
+            station["number_of_trips"] = station["number_of_trips"] + 1;
+        else:
+            station["number_of_trips"] = 1;
+
+    return jsonify({"stations": station_dict.values()});
 
 def getQueryObject(args):
     query = dict()
@@ -115,7 +137,25 @@ def load_trip_data():
                 print str(count / 7597) + "%"
     print "Data Loaded: " + str(len(tripData)) + " rows"
 
+def load_station_data():
+    print "Station data now..."
+    with open('rawdata/Divvy_Stations_2013.csv', 'rU') as csvIn:
+        csvreader = csv.reader(csvIn)
+        print csvIn.next().split(',')
+        count = 0
+        for row in csvreader:
+            stationData.append({
+                'id': int(row[0]),
+                'name': row[1],
+                'latitude': row[2],
+                'longitude': row[3]
+            })
+            count += 1
+            if count % 300 == 0:
+                print str(count / 300) + "%"
+    print "Data Loaded: " + str(len(stationData)) + " rows"
 
 if __name__ == "__main__":
     load_trip_data()
+    load_station_data()
     app.run()
